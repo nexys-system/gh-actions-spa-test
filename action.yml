@@ -5,6 +5,9 @@ branding:
   icon: book-open
   color: purple
 inputs:
+  build-cmd:
+    description: build command
+    default: VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build
   nodeversion:
     description: node version
     default: 18
@@ -24,5 +27,5 @@ runs:
       run: yarn test
       shell: bash
     - name: Build
-      run: VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build
+      run: ${{ inputs.build-command }}
       shell: bash
