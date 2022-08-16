@@ -1,4 +1,4 @@
-name: spa-test
+name: yarn-spa-test
 description: This GitHub Action will build and test your app
 author: johnb8005
 branding:
