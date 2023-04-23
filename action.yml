@@ -11,6 +11,10 @@ inputs:
   nodeversion:
     description: node version
     default: 18
+  deploy-project-name:
+    description: project name for the deploy service
+  deploy-token:
+    description: token needed to deploy
   message:
     description: The message to prepend the review suggestion
 runs:
