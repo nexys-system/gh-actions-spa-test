@@ -35,11 +35,11 @@ runs:
       shell: bash
     - name: Deploy
       run: |
-        if [ -z "${{ inputs.deploy-project-name }}" ]; then
+        if [ -n "${{ inputs.deploy-project-name }}" ] && [ -n "${{ inputs.deploy-token }}" ]; then
           zip -r dist.zip dist
           curl -k -X POST -H 'X-TOKEN: ${{ inputs.deploy-token }}' -F 'file=@dist.zip' -F 'project=${{ inputs.deploy-project-name }}' https://deploy.nexys.io/upload
           rm dist.zip
         else
-          echo "not deploying, to deploy set 'deploy-project-name'"
+          echo "not deploying, to deploy set 'deploy-project-name' and 'deploy-token'"
         fi
       shell: bash
