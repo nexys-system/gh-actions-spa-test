@@ -10,7 +10,7 @@ inputs:
     default: VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build
   nodeversion:
     description: node version
-    default: 18
+    default: 20
   deploy-project-name:
     description: project name for the deploy service
   deploy-token:
