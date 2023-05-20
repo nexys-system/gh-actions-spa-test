@@ -36,8 +36,13 @@ runs:
     - name: Deploy
       run: |
         if [ -n "${{ inputs.deploy-project-name }}" ] && [ -n "${{ inputs.deploy-token }}" ]; then
+          # create meta file
+          printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > meta.json
+          # zip build
           zip -r dist.zip dist
+          # push to deploy service
           curl -k -X POST -H 'X-TOKEN: ${{ inputs.deploy-token }}' -F 'file=@dist.zip' -F 'project=${{ inputs.deploy-project-name }}' https://deploy.nexys.io/upload
+          # remove created zip
           rm dist.zip
         else
           echo "not deploying, to deploy set 'deploy-project-name' and 'deploy-token'"
