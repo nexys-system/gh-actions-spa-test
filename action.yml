@@ -37,7 +37,7 @@ runs:
       run: |
         if [ -n "${{ inputs.deploy-project-name }}" ] && [ -n "${{ inputs.deploy-token }}" ]; then
           # create meta file
-          printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > meta.json
+          printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > dist/meta.json
           # zip build
           zip -r dist.zip dist
           # push to deploy service
