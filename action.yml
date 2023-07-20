@@ -21,7 +21,7 @@ runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
+    - uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.nodeversion }}
     - name: Install dependencies via yarn
