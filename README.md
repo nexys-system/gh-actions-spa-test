@@ -1,13 +1,15 @@
-# Continuous Integration (CI) Github Actions for JS Single Page Application
+# Continuous Integration (CI) GitHub Actions for JS Single Page Application
 
-Tests and builds a JS application. This has been optimized for [vite](https://vitejs.dev/). We assume 
+This GitHub Action is optimized for testing and building JavaScript Single Page Applications, particularly projects set up with [Vite](https://vitejs.dev/). 
 
-* `yarn test`: tests package. If you do not have any tests, make sure you add `"test": "echo \"no tests\""` in the `scripts` section of your `package.json`
-* `yarn build`: builds package (can be overwritten with params, see below)
+## Assumptions
 
-## Usage
+- `yarn test`: A script for running tests. If your project doesn't have tests, ensure you add `"test": "echo \"no tests\""` to the `scripts` section of your `package.json`.
+- `yarn build`: A script for building your project. This can be customized using the `build-command` parameter (see below).
 
-```
+## Basic Usage
+
+```yaml
 name: Test
 
 on: [push]
@@ -16,32 +18,53 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: nexys-system/gh-actions-spa-test@v1.1.0
+      - uses: nexys-system/gh-actions-spa-test@v1.1.5
 ```
 
-## Params
 
-* `build-command`: build command. Default is (optimized for [vite](https://vitejs.dev/)): `VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build`
-* `nodeversion`: node version used for the build, by default `20`
-* `use-cache`: caches yarn dependencies based on the `yarn.lock` file
+## Parameters
 
+This action supports a range of input parameters for customization:
 
-### Usage example with params
+- `build-command`: Specifies the build command to run. 
+   - Default: `VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build`
 
-```
+- `nodeversion`: Specifies the Node.js version to use.
+   - Default: `20`
+
+- `use-cache`: Determines whether to cache Yarn dependencies based on the `yarn.lock` file.
+   - Default: `true`
+
+- `deploy-project-name`: Specifies the project name for the deploy service. If this and `deploy-token` are provided, the action will attempt to deploy your application.
+
+- `deploy-token`: Specifies the token needed for deployment. If this and `deploy-project-name` are provided, the action will attempt to deploy your application.
+
+- `message`: Specifies a message to prepend the review suggestion. This input is reserved for future use and is not utilized in the current version of the action.
+
+### Usage Example with Multiple Parameters
+
+```yaml
 ...
 - uses: nexys-system/gh-actions-spa-test@v1.1.0
   with:
     build-command: yarn buildprod
+    nodeversion: '14'
+    use-cache: 'false'
+    deploy-project-name: 'my-spa-project'
+    deploy-token: ${{ secrets.DEPLOY_TOKEN }}
 ```
 
-## Docker
+In this example, the action is customized with a new build command, a different Node.js version, disabling cache, and providing deployment details.
 
-To generate a docker container, have a look at https://github.com/nexys-system/gh-actions-docker-spa
+## Deployment Configuration
 
-## Deploy
+For deploying your application through [Nova](https://nova.nexys.io), you need to set the following parameters:
 
-From deploy.nexys.io, set the following variables:
+- `deploy-project-name`: Specifies the project name for the deploy service.
+- `deploy-token`: Specifies the token needed for deployment.
 
-* `deploy-project-name`
-* `deploy-token`
+If the `deploy-project-name` and `deploy-token` are not provided, the deployment step is skipped, and a message is logged.
+
+## Docker Integration
+
+To generate a Docker container for your application, refer to the [gh-actions-docker-spa](https://github.com/nexys-system/gh-actions-docker-spa) repository for a compatible action.
