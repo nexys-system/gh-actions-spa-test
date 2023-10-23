@@ -23,6 +23,7 @@ jobs:
 
 * `build-command`: build command. Default is (optimized for [vite](https://vitejs.dev/)): `VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build`
 * `nodeversion`: node version used for the build, by default `20`
+* `use-cache`: caches yarn dependencies based on the `yarn.lock` file
 
 
 ### Usage example with params
