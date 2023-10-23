@@ -18,7 +18,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: nexys-system/gh-actions-spa-test@v1.1.5
+      - uses: nexys-system/gh-actions-spa-test@v1.1.6
 ```
 
 
@@ -39,13 +39,11 @@ This action supports a range of input parameters for customization:
 
 - `deploy-token`: Specifies the token needed for deployment. If this and `deploy-project-name` are provided, the action will attempt to deploy your application.
 
-- `message`: Specifies a message to prepend the review suggestion. This input is reserved for future use and is not utilized in the current version of the action.
-
 ### Usage Example with Multiple Parameters
 
 ```yaml
 ...
-- uses: nexys-system/gh-actions-spa-test@v1.1.0
+- uses: nexys-system/gh-actions-spa-test@v1.1.6
   with:
     build-command: yarn buildprod
     nodeversion: '14'
