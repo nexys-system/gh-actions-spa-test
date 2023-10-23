@@ -40,7 +40,6 @@ runs:
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
-      shell: bash
         
     - name: Install dependencies via yarn
       run: yarn
