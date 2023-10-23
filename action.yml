@@ -15,8 +15,6 @@ inputs:
     description: project name for the deploy service
   deploy-token:
     description: token needed to deploy
-  message:
-    description: The message to prepend the review suggestion
   use-cache:
     description: caches yarn dependencies based on hash of yarn.lock
     default: true
