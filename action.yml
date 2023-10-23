@@ -17,6 +17,9 @@ inputs:
     description: token needed to deploy
   message:
     description: The message to prepend the review suggestion
+  use-cache:
+    description: caches yarn dependencies based on hash of yarn.lock
+    default: true
 runs:
   using: "composite"
   steps:
@@ -26,11 +29,13 @@ runs:
         node-version: ${{ inputs.nodeversion }}
 
     - name: Get yarn cache directory path
+      if: inputs.use-cache == true
       id: yarn-cache-dir-path
       run: echo "YARN_CACHE_DIR=$(yarn cache dir)" >> $GITHUB_ENV
       shell: bash
 
     - name: Cache yarn dependencies
+      if: inputs.use-cache == true
       uses: actions/cache@v2
       with:
         path: ${{ env.YARN_CACHE_DIR }}
