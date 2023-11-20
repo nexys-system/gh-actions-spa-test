@@ -18,7 +18,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: nexys-system/gh-actions-spa-test@v1.1.6
+      - uses: nexys-system/gh-actions-spa-test@v1.1.7
 ```
 
 
