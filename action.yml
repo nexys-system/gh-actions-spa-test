@@ -15,6 +15,9 @@ inputs:
     description: project name for the deploy service
   deploy-token:
     description: token needed to deploy
+  gzip-compression:
+    description: compresses files to gzip
+    default: true
   use-cache:
     description: caches yarn dependencies based on hash of yarn.lock
     default: true
@@ -55,6 +58,15 @@ runs:
         if [ -n "${{ inputs.deploy-project-name }}" ] && [ -n "${{ inputs.deploy-token }}" ]; then
           # create meta file
           printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > dist/meta.json
+          
+          if [ "${{ inputs.gzip-compression }}" = true ] ; then
+            # gzip compress files - You might want to be selective about what you compress
+            find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -exec gzip "{}" \;
+
+            # rename gzipped files to remove .gz extension (optional, depends on your server setup)
+            find dist -type f -name '*.gz' -exec sh -c 'mv "$0" "${0%.gz}"' {} \;
+          fi
+
           # zip build
           zip -r dist.zip dist
           # push to deploy service
