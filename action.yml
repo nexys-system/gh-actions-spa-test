@@ -59,7 +59,7 @@ runs:
           # create meta file
           printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > dist/meta.json
           
-          if [ "${{ inputs.gzip-compression }}" = true ] ; then
+          if [ "${{ inputs.gzip-compression }}" = "true" ] ; then
             # gzip compress files - You might want to be selective about what you compress
             find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -exec gzip "{}" \;
 
