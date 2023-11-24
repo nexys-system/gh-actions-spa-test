@@ -56,10 +56,12 @@ runs:
     - name: Deploy
       run: |
         if [ -n "${{ inputs.deploy-project-name }}" ] && [ -n "${{ inputs.deploy-token }}" ]; then
+          echo "deploying";
           # create meta file
           printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > dist/meta.json
           
           if [ "${{ inputs.gzip-compression }}" = "true" ] ; then
+            echo "gzipping files";
             # gzip compress files - You might want to be selective about what you compress
             find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -exec gzip "{}" \;
 
