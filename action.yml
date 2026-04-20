@@ -1,5 +1,5 @@
-name: yarn-spa-test
-description: This GitHub Action will build and test your app
+name: bun-spa-test
+description: This GitHub Action will build and test your SPA app using Bun
 author: johnb8005
 branding:
   icon: book-open
@@ -7,10 +7,7 @@ branding:
 inputs:
   build-command:
     description: build command
-    default: VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build
-  nodeversion:
-    description: node version
-    default: 20
+    default: VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA bun run build
   deploy-project-name:
     description: project name for the deploy service
   deploy-token:
@@ -18,36 +15,16 @@ inputs:
   gzip-compression:
     description: compresses files to gzip
     default: true
-  use-cache:
-    description: caches yarn dependencies based on hash of yarn.lock
-    default: true
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ inputs.nodeversion }}
-        cache: 'yarn'
-    - name: Get yarn cache directory path
-      if: ${{ inputs.use-cache == 'true' && !contains(github.token, 'ghp_') }}
-      id: yarn-cache-dir-path
-      run: echo "YARN_CACHE_DIR=$(yarn cache dir)" >> $GITHUB_ENV
-      shell: bash
-    - name: Cache yarn dependencies
-      if: ${{ inputs.use-cache == 'true' && !contains(github.token, 'ghp_') }}
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.YARN_CACHE_DIR }}
-        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-yarn-
-        
-    - name: Install dependencies via yarn
-      run: yarn
+    - uses: oven-sh/setup-bun@v2
+    - name: Install dependencies
+      run: bun install
       shell: bash
     - name: Test
-      run: yarn test
+      run: bun test
       shell: bash
     - name: Build
       run: ${{ inputs.build-command }}
@@ -58,12 +35,10 @@ runs:
           echo "deploying";
           # create meta file
           printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > dist/meta.json
-          
+
           if [ "${{ inputs.gzip-compression }}" = "true" ] ; then
             echo "gzipping files";
-            # gzip compress files - You might want to be selective about what you compress
             find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -exec gzip "{}" \;
-            # rename gzipped files to remove .gz extension (optional, depends on your server setup)
             find dist -type f -name '*.gz' -exec sh -c 'mv "$0" "${0%.gz}"' {} \;
           fi
           # zip build
