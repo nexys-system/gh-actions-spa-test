@@ -1,5 +1,5 @@
-name: yarn-spa-test
-description: This GitHub Action will build and test your app
+name: bun-spa-test
+description: This GitHub Action will build, test, and deploy your SPA app using Bun
 author: johnb8005
 branding:
   icon: book-open
@@ -7,10 +7,7 @@ branding:
 inputs:
   build-command:
     description: build command
-    default: VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build
-  nodeversion:
-    description: node version
-    default: 20
+    default: VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA bun run build
   deploy-project-name:
     description: project name for the deploy service
   deploy-token:
@@ -21,60 +18,35 @@ inputs:
   gzip-compression:
     description: compresses files to gzip
     default: true
-  use-cache:
-    description: caches yarn dependencies based on hash of yarn.lock
-    default: true
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ inputs.nodeversion }}
-        cache: 'yarn'
-    - name: Get yarn cache directory path
-      if: ${{ inputs.use-cache == 'true' && !contains(github.token, 'ghp_') }}
-      id: yarn-cache-dir-path
-      run: echo "YARN_CACHE_DIR=$(yarn cache dir)" >> $GITHUB_ENV
-      shell: bash
-    - name: Cache yarn dependencies
-      if: ${{ inputs.use-cache == 'true' && !contains(github.token, 'ghp_') }}
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.YARN_CACHE_DIR }}
-        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-yarn-
-
-    - name: Install dependencies via yarn
-      run: yarn
+    - uses: oven-sh/setup-bun@v2
+    - name: Install dependencies
+      run: bun install
       shell: bash
     - name: Test
-      run: yarn test
+      run: bun test
       shell: bash
     - name: Build
       run: ${{ inputs.build-command }}
       shell: bash
     - name: Deploy
+      if: ${{ inputs.deploy-project-name != '' && inputs.deploy-token != '' }}
+      working-directory: ${{ inputs.dist-path }}
       run: |
-        if [ -n "${{ inputs.deploy-project-name }}" ] && [ -n "${{ inputs.deploy-token }}" ]; then
-          DIST_PATH="${{ inputs.dist-path }}"
-          echo "deploying from $DIST_PATH";
-          # create meta file
-          printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > "$DIST_PATH/meta.json"
-
-          if [ "${{ inputs.gzip-compression }}" = "true" ] ; then
-            echo "gzipping files";
-            find "$DIST_PATH" -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -exec gzip "{}" \;
-            find "$DIST_PATH" -type f -name '*.gz' -exec sh -c 'mv "$0" "${0%.gz}"' {} \;
-          fi
-          # zip build — zip from inside the dist dir so the archive contains top-level files
-          (cd "$DIST_PATH" && zip -r "$OLDPWD/dist.zip" .)
-          # push to deploy service
-          curl -k -X POST -H 'X-TOKEN: ${{ inputs.deploy-token }}' -F 'file=@dist.zip' -F 'project=${{ inputs.deploy-project-name }}' https://deploy.nexys.io/upload
-          # remove created zip
-          rm dist.zip
-        else
-          echo "not deploying, to deploy set 'deploy-project-name' and 'deploy-token'"
+        echo "deploying from ${{ inputs.dist-path }}"
+        printf '{"sha":"%s","version":"%s","date":"%s"}' "$GITHUB_SHA" "${GITHUB_REF##*/}" "$(date -u)" > meta.json
+        if [ "${{ inputs.gzip-compression }}" = "true" ] ; then
+          echo "gzipping files"
+          find . -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -exec gzip "{}" \;
+          find . -type f -name '*.gz' -exec sh -c 'mv "$0" "${0%.gz}"' {} \;
         fi
+        zip -r "$GITHUB_WORKSPACE/dist.zip" .
+        curl -f -X POST \
+          -H 'X-TOKEN: ${{ inputs.deploy-token }}' \
+          -F 'file=@'"$GITHUB_WORKSPACE"'/dist.zip' \
+          -F 'project=${{ inputs.deploy-project-name }}' \
+          https://deploy.nexys.io/upload
       shell: bash

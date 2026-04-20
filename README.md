@@ -1,11 +1,11 @@
 # Continuous Integration (CI) GitHub Actions for JS Single Page Application
 
-This GitHub Action is optimized for testing and building JavaScript Single Page Applications, particularly projects set up with [Vite](https://vitejs.dev/). 
+This GitHub Action is optimized for testing and building JavaScript Single Page Applications using [Bun](https://bun.sh/), particularly projects set up with [Vite](https://vitejs.dev/).
 
 ## Assumptions
 
-- `yarn test`: A script for running tests. If your project doesn't have tests, ensure you add `"test": "echo \"no tests\""` to the `scripts` section of your `package.json`.
-- `yarn build`: A script for building your project. This can be customized using the `build-command` parameter (see below).
+- `bun test`: A script for running tests. If your project doesn't have tests, ensure you add `"test": "echo \"no tests\""` to the `scripts` section of your `package.json`.
+- `bun run build`: A script for building your project. This can be customized using the `build-command` parameter (see below).
 
 ## Basic Usage
 
@@ -18,41 +18,45 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: nexys-system/gh-actions-spa-test@v1.1.7
+      - uses: nexys-system/gh-actions-spa-test@v2.0.0
 ```
-
 
 ## Parameters
 
-This action supports a range of input parameters for customization:
+- `build-command`: Specifies the build command to run.
+   - Default: `VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA bun run build`
 
-- `build-command`: Specifies the build command to run. 
-   - Default: `VITE_VERSION=${GITHUB_REF##*/} VITE_GIT_SHA=$GITHUB_SHA yarn build`
-
-- `nodeversion`: Specifies the Node.js version to use.
-   - Default: `20`
-
-- `use-cache`: Determines whether to cache Yarn dependencies based on the `yarn.lock` file.
-   - Default: `true`
+- `dist-path`: Path to the dist folder (relative to repo root).
+   - Default: `dist`
 
 - `deploy-project-name`: Specifies the project name for the deploy service. If this and `deploy-token` are provided, the action will attempt to deploy your application.
 
 - `deploy-token`: Specifies the token needed for deployment. If this and `deploy-project-name` are provided, the action will attempt to deploy your application.
 
-### Usage Example with Multiple Parameters
+- `gzip-compression`: Compresses `.js`, `.css`, and `.html` files with gzip before deploying.
+   - Default: `true`
+
+### Usage Example (monorepo with deploy)
 
 ```yaml
-...
-- uses: nexys-system/gh-actions-spa-test@v1.1.6
-  with:
-    build-command: yarn buildprod
-    nodeversion: '14'
-    use-cache: 'false'
-    deploy-project-name: 'my-spa-project'
-    deploy-token: ${{ secrets.DEPLOY_TOKEN }}
-```
+name: Deploy
 
-In this example, the action is customized with a new build command, a different Node.js version, disabling cache, and providing deployment details.
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nexys-system/gh-actions-spa-test@v2.0.0
+        with:
+          build-command: cd packages/client && VITE_GIT_SHA=$GITHUB_SHA VITE_VERSION=${GITHUB_REF##*/} bun run build
+          dist-path: packages/client/dist
+          deploy-project-name: my-project
+          deploy-token: ${{ secrets.DEPLOY_TOKEN }}
+```
 
 ## Deployment Configuration
 
@@ -61,8 +65,4 @@ For deploying your application through [Nova](https://nova.nexys.io), you need t
 - `deploy-project-name`: Specifies the project name for the deploy service.
 - `deploy-token`: Specifies the token needed for deployment.
 
-If the `deploy-project-name` and `deploy-token` are not provided, the deployment step is skipped, and a message is logged.
-
-## Docker Integration
-
-To generate a Docker container for your application, refer to the [gh-actions-docker-spa](https://github.com/nexys-system/gh-actions-docker-spa) repository for a compatible action.
+If the `deploy-project-name` and `deploy-token` are not provided, the deployment step is skipped.
