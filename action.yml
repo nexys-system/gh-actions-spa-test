@@ -12,6 +12,9 @@ inputs:
     description: project name for the deploy service
   deploy-token:
     description: token needed to deploy
+  dist-path:
+    description: path to the dist directory
+    default: dist
   gzip-compression:
     description: compresses files to gzip
     default: true
@@ -34,15 +37,16 @@ runs:
         if [ -n "${{ inputs.deploy-project-name }}" ] && [ -n "${{ inputs.deploy-token }}" ]; then
           echo "deploying";
           # create meta file
-          printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > dist/meta.json
+          DIST_PATH="${{ inputs.dist-path }}"
+          printf "{\"sha\":\"$GITHUB_SHA\",\"version\":\"${GITHUB_REF##*/}\",\"date\":\"$(date -u)\"}" > "$DIST_PATH/meta.json"
 
           if [ "${{ inputs.gzip-compression }}" = "true" ] ; then
             echo "gzipping files";
-            find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -exec gzip "{}" \;
-            find dist -type f -name '*.gz' -exec sh -c 'mv "$0" "${0%.gz}"' {} \;
+            find "$DIST_PATH" -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -exec gzip "{}" \;
+            find "$DIST_PATH" -type f -name '*.gz' -exec sh -c 'mv "$0" "${0%.gz}"' {} \;
           fi
           # zip build
-          zip -r dist.zip dist
+          zip -r dist.zip "$DIST_PATH"
           # push to deploy service
           curl -k -X POST -H 'X-TOKEN: ${{ inputs.deploy-token }}' -F 'file=@dist.zip' -F 'project=${{ inputs.deploy-project-name }}' https://deploy.nexys.io/upload
           # remove created zip
